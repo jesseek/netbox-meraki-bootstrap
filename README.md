@@ -43,13 +43,13 @@ bootstrap_meraki_netbox.yml.
 ## Running the bootstrap_meraki_netbox.yml Ansible playbook
 
 This playbook adds your Meraki devices to Netbox.  
-Includes:
+### Includes:
     Add devices for specified Meraki network to specified Netbox site
     Creates a Management interface for the device in Netbox
     If the Meraki device is configured with a static IP
         1) Creates the IP Entry in Netbox
         2) Assigns the IP as the primary IP on the Netbox device
-Usage:
+### Usage:
     ansible-playbook bootstrap_prep_netbox.yml
 ## License
 
