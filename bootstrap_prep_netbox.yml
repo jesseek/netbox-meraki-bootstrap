@@ -1,0 +1,85 @@
+---
+- name: Bootstrap Meraki Base Data Into Netbox
+  hosts: localhost
+  gather_facts: false
+  vars:
+    netbox_url: ''  ## Url for netbox instance
+    netbox_token: ''  ##Netbox Token
+    netbox_validate_certs: false  ## Recommended to be true for production
+    meraki_api_key: '' ##Meraki API Key
+    meraki_org_name: '' ##Text name for the organization (used to resolve org id)
+  tasks:
+      #resolve Meraki org id from the provided meraki_org_name
+    - tags: resolve_org_id
+      block:
+      - name: "Resolve Meraki Org ID from provided name: {{ meraki_org_name }}"
+        cisco.meraki.organizations_info:
+          meraki_api_key: "{{ meraki_api_key }}"
+        register: org_info
+      - set_fact:
+          meraki_org_id: "{{ item['id'] }}"
+        when: item['name'] == meraki_org_name
+        with_items: "{{ org_info['meraki_response'] }}"
+
+      #collect the Meraki device info for this organization (productType and model)
+    - tags: meraki_device_info
+      block:
+      - name: Gather Meraki productType's and model's for this Org
+        cisco.meraki.organizations_inventory_devices_info:
+          meraki_api_key: "{{ meraki_api_key }}"
+          organizationId: "{{ meraki_org_id }}"
+          meraki_suppress_logging: true
+        register: meraki_devices
+      - name: Product Types
+        set_fact:
+          product_types: "{{ product_types | default([]) + [ item.productType ] }}"
+          device_types: "{{ device_types | default([]) + [ item.model ] }}"
+        with_items: "{{ meraki_devices['meraki_response'] }}"
+      - debug:
+          var: item
+        loop: "{{ product_types | flatten | unique }}"
+      - debug:
+          var: item
+        loop: "{{ device_types | flatten | unique }}"
+
+      #bootstrap the Meraki info in Netbox (Manufacturer, Platform, Device Role, and Device Type)
+    - tags: add_to_netbox
+      block:
+      - name: Add Meraki as a manufacturer in Netbox
+        netbox.netbox.netbox_manufacturer:
+          netbox_url: "{{ netbox_url }}"
+          netbox_token: "{{ netbox_token }}"
+          validate_certs: "{{ netbox_validate_certs }}"
+          data:
+            name: "Meraki"
+          state: present
+      - name: Add Meraki as a platform in Netbox
+        netbox.netbox.netbox_platform:
+          netbox_url: "{{ netbox_url }}"
+          netbox_token: "{{ netbox_token }}"
+          validate_certs: "{{ netbox_validate_certs }}"
+          data:
+            name: "Meraki"
+            manufacturer: "Meraki"           
+          state: present
+      - name: Map and Add Meraki productType to Netbox Device Role
+        netbox.netbox.netbox_device_role:
+          netbox_url: "{{ netbox_url }}"
+          netbox_token: "{{ netbox_token }}"
+          validate_certs: "{{ netbox_validate_certs }}"
+          data:
+            name: "Meraki {{ item }}"
+          state: present
+        with_items: "{{ product_types | flatten | unique }}"
+      - name: Map and Add Meraki Model to Netbox Device Types
+        netbox.netbox.netbox_device_type:
+          netbox_url: "{{ netbox_url }}"
+          netbox_token: "{{ netbox_token }}"
+          validate_certs: "{{ netbox_validate_certs }}"
+          data:
+            model: "{{ item }}"
+            manufacturer: "Meraki"
+          state: present
+        with_items: "{{ device_types | flatten | unique }}"
+
+

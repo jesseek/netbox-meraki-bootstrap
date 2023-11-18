@@ -1,0 +1,122 @@
+---
+- name: Bootstrap Meraki Inventory Into Netbox
+  hosts: localhost
+  gather_facts: false
+  vars:
+    netbox_url: ''  ## Url for netbox instance
+    netbox_token: ''  ##Netbox Token
+    netbox_validate_certs: false  ## Recommended to be true for production
+    netbox_site_name: '' ## The netbox site name that you want to add the Meraki Devices To
+    meraki_api_key: '' ##Meraki API Key
+    meraki_org_name: '' ##Meraki Organization Name
+    meraki_network_name: '' ##Meraki Network Name that you want to pull the Meraki Device Info From
+  tasks:
+      #resolve Meraki org id from the provided meraki_org_name
+    - tags: resolve_org_id
+      block:
+      - name: "Resolve Meraki Org ID from provided name: {{ meraki_org_name }}"
+        cisco.meraki.organizations_info:
+          meraki_api_key: "{{ meraki_api_key }}"
+        register: org_info
+      - set_fact:
+          meraki_org_id: "{{ item['id'] }}"
+        when: item['name'] == meraki_org_name
+        with_items: "{{ org_info['meraki_response'] }}"
+
+      #resolve Meraki network id from the provided meraki_network_name       
+    - tags: meraki_network_id
+      block:
+      - name: Resolve Meraki Network ID for {{ meraki_network_name }}
+        cisco.meraki.networks_info:
+          meraki_api_key: "{{ meraki_api_key }}"
+          organizationId: "{{ meraki_org_id }}"
+          meraki_suppress_logging: true
+        register: net_info
+      - set_fact: 
+          meraki_network_id: "{{ item.id }}"
+        when: item.name == meraki_network_name
+        with_items: "{{ net_info['meraki_response'] }}"
+
+      #Get Meraki device information
+    - tags: meraki_device_info
+      block:
+      - name: Get devices for Meraki Network {{ meraki_network_name}}
+        cisco.meraki.organizations_inventory_devices_info:
+          meraki_api_key: "{{ meraki_api_key }}"
+          organizationId: "{{ meraki_org_id }}"
+          networkIds: "{{ meraki_network_id }}"
+          meraki_suppress_logging: true
+        register: meraki_devices
+      - name: Get device Management IP info for Meraki Network {{ meraki_network_name}}
+        cisco.meraki.devices_management_interface_info:
+            meraki_api_key: "{{ meraki_api_key }}"
+            serial: "{{ item.serial }}"
+        register: device_info
+        with_items: "{{ meraki_devices['meraki_response'] }}"
+      - debug:
+          msg: "{{ device_info }}"
+
+      #Add the devices to netbox
+    - tags: add_device_to_netbox
+      block:
+      - name: "Add Device to NetBox"
+        netbox.netbox.netbox_device:
+          netbox_url: "{{ netbox_url }}"
+          netbox_token: "{{ netbox_token }}"
+          validate_certs: "{{ netbox_validate_certs }}"
+          data:
+            name: "{{ item.item.name }}"
+            device_type: "{{ item.item.model }}"
+            platform: "Meraki"
+            serial: "{{ item.item.serial }}"
+            site: "{{ netbox_site_name }}"
+            device_role: "meraki-{{ item.item.productType }}"
+          state: present
+        delegate_to: localhost
+        with_items: "{{ device_info['results'] }}"
+
+      - name: "Add New Interface for Device in Netbox"
+        ### this interface will be used as the primary IP and interface for the device
+        netbox.netbox.netbox_device_interface:
+          netbox_url: "{{ netbox_url }}"
+          netbox_token: "{{ netbox_token }}"
+          validate_certs: "{{ netbox_validate_certs }}"
+          data:
+            device: "{{ item.item.name }}"
+            name: Management_Interface
+            type: other
+          state: present
+        delegate_to: localhost
+        with_items: "{{ device_info['results'] }}"
+
+      - name: "Add IP address of Device to Netbox"
+        netbox.netbox.netbox_ip_address:
+          netbox_url: "{{ netbox_url }}"
+          netbox_token: "{{ netbox_token }}"
+          validate_certs: "{{ netbox_validate_certs }}"
+          data:
+            family: 4
+            address: "{{ item.meraki_response.wan1.staticIp }}/32"
+            status: active
+            assigned_object:
+              name: Management_Interface
+              device: "{{ item.item.name }}"
+          state: present
+        delegate_to: localhost
+        when: item.meraki_response.wan1.usingStaticIp == true
+        with_items: "{{ device_info['results'] }}"
+
+      - name: "Assign IP Address as Primary IP for Device in Netbox"
+        netbox.netbox.netbox_device:
+          netbox_url: "{{ netbox_url }}"
+          netbox_token: "{{ netbox_token }}"
+          data:
+            name: "{{ item.item.name }}"
+            status: Active
+            primary_ip4: "{{ item.meraki_response.wan1.staticIp }}/32"
+          state: present
+          validate_certs: no
+        delegate_to: localhost
+        when: item.meraki_response.wan1.usingStaticIp == true
+        with_items: "{{ device_info['results'] }}"
+
