@@ -44,9 +44,9 @@ bootstrap_meraki_netbox.yml.
 
 This playbook adds your Meraki devices to Netbox.  
 ### Includes:
-    Add devices for specified Meraki network to specified Netbox site
-    - Creates a Management interface for the device in Netbox
-    - If the Meraki device is configured with a static IP
+    - Add devices for specified Meraki network to specified Netbox site.
+    - Creates a Management interface for the device in Netbox.
+    - If the Meraki device is configured with a static IP:
         1) Creates the IP Entry in Netbox
         2) Assigns the IP as the primary IP on the Netbox device
 ### Usage:
