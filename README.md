@@ -11,7 +11,7 @@ Ansible Playbooks for Bootstrapping Meraki Device's into Netbox
     ansible-galaxy collection install netbox.netbox
     ansible-galaxy collection install cisco.meraki
     ```
-- A Meraki account with at least 1 network created and 1 device added to that network
+- A Meraki account with at least 1 network created and at least 1 device added to that network
 - A Meraki account API key
 
 ## Basic Configuration
