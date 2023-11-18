@@ -19,13 +19,13 @@ Ansible Playbooks for Bootstrapping Meraki Device's into Netbox
 Update 'vars' section of bootstrap_* Ansible playbooks with valid information.
 ```
   vars:
-    netbox_url: ''  ## Url for netbox instance
-    netbox_token: ''  ##Netbox Token
-    netbox_validate_certs: false  ## Recommended to be true for production
-    netbox_site_name: '' ## The netbox site name that you want to add the Meraki Devices To
-    meraki_api_key: '' ##Meraki API Key
-    meraki_org_name: '' ##Meraki Organization Name
-    meraki_network_name: '' ##Meraki Network Name that you want to pull the Meraki Device Info From
+    netbox_url: ''  # Url for netbox instance
+    netbox_token: ''  # Netbox Token
+    netbox_validate_certs: false  # Recommended to be true for production
+    netbox_site_name: '' # The netbox site name that you want to add the Meraki Devices To
+    meraki_api_key: '' # Meraki API Key
+    meraki_org_name: '' # Meraki Organization Name
+    meraki_network_name: '' # Meraki Network Name that you want to pull the Meraki Device Info From
 ```
 
 ## Running the bootstrap_prep_netbox.yml Ansible playbook
