@@ -39,9 +39,7 @@ bootstrap_meraki_netbox.yml.
     - Netbox Device Roles: Maps your Meraki productType's to Netbox Device Role's
     - Netbox Device Types: Maps your Meraki model's to Netbox Device Type's
 ### Usage:
-    ```
     ansible-playbook bootstrap_prep_netbox.yml
-    ```
 ## Running the bootstrap_meraki_netbox.yml Ansible playbook
 
 This playbook adds your Meraki devices to Netbox.  
