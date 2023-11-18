@@ -3,18 +3,12 @@ Ansible Playbooks for Bootstrapping Meraki Device's into Netbox
 
 
 ## Requirements
-
-These scripts depend on `boto3` and requires Python. You can install `boto3` using pip:
-
-    pip install boto3
-
-Requirements:
 1) A working Netbox instance (tested on Netbox 3.3.9)
 2) A Netbox API Key
 3) A workstation with Ansible installed (tested with Ansible 2.12.10 and Python 3.8.10)
 4) Ansible Galaxy Netbox and Meraki Collections installed on Workstation
-    ansible-galaxy collection install netbox.netbox
-    ansible-galaxy collection install cisco.meraki
+        ansible-galaxy collection install netbox.netbox
+        ansible-galaxy collection install cisco.meraki
 5) A Meraki account with at least 1 network created and 1 device added to that network
 6) A Meraki account API key
 
