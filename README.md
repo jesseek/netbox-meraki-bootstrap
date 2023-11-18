@@ -23,7 +23,7 @@ Update 'vars' section of bootstrap_* Ansible playbooks with valid information
 This playbook generates and adds your Meraki `base data` to Netbox in preparation for
 adding your Meraki devices to Netbox. This playbook should be run prior to running
 bootstrap_meraki_netbox.yml. 
-`base data` includes:
+###`base data` includes:
     - Netbox Manufacturer: Meraki
     - Netbox Platform: Meraki
     - Netbox Device Roles: Maps your Meraki productType's to Netbox Device Role's
