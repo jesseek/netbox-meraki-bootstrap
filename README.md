@@ -24,10 +24,10 @@ This playbook generates and adds your Meraki `base data` to Netbox in preparatio
 adding your Meraki devices to Netbox. This playbook should be run prior to running
 bootstrap_meraki_netbox.yml. 
 `base data` includes:
-    Netbox Manufacturer: Meraki
-    Netbox Platform: Meraki
-    Netbox Device Roles: Maps your Meraki productType's to Netbox Device Role's
-    Netbox Device Types: Maps your Meraki model's to Netbox Device Type's
+    - Netbox Manufacturer: Meraki
+    - Netbox Platform: Meraki
+    - Netbox Device Roles: Maps your Meraki productType's to Netbox Device Role's
+    - Netbox Device Types: Maps your Meraki model's to Netbox Device Type's
 Usage:
     ansible-playbook bootstrap_prep_netbox.yml
 
